@@ -1,6 +1,12 @@
 # REFLEX - Embedded Reaction-Time Game
 
-REFLEX is a five-round embedded reaction-time game built around an Arduino Mega 2560. The project combines embedded C++, digital electronics, transistor-driven illuminated arcade controls, a 16x2 LCD, audio feedback, custom soldered perfboard hardware, and a 3D-printed enclosure designed in Fusion 360.
+REFLEX is a five-round embedded reaction-time game built around an Arduino Mega 2560. The project combines embedded C++, digital electronics, transistor-driven illuminated arcade controls, a 16x2 LCD, audio feedback, custom soldered perfboard hardware, and an enclosure designed in Fusion 360 for 3D printing.
+
+## Prototype Demo
+
+A working breadboard prototype demonstrates the game flow, randomized cues, reaction-time measurement, LCD feedback, and scoring before the design was transferred to permanent hardware.
+
+[Watch the REFLEX breadboard prototype demo](docs/demo/REFLEX_Prototype_Demo.mp4)
 
 ## Project Goals
 
@@ -29,8 +35,8 @@ REFLEX was built as a hands-on electrical engineering project focused on the com
 - Finite-state-machine firmware architecture
 - Illuminated arcade buttons
 - Custom perfboard power distribution and transistor driver circuitry
-- Internal USB power-bank operation
-- Custom Fusion 360 enclosure
+- Internal USB power-bank power system
+- Custom Fusion 360 enclosure designed for 3D printing
 
 ## System Overview
 
@@ -120,7 +126,8 @@ REFLEX-Embedded-Reaction-Game/
 |   |-- source/
 |   `-- stl/
 |-- docs/
-|   `-- images/
+|   |-- images/
+|   `-- demo/
 |-- bom/
 |   `-- BOM.md
 `-- LICENSE
@@ -139,7 +146,9 @@ REFLEX-Embedded-Reaction-Game/
 - [x] Enclosure submitted for 3D printing
 - [ ] Final enclosure assembly
 - [ ] Final integrated system test
-- [ ] Final project photos and demo video
+- [x] Breadboard prototype demo video
+- [ ] Final project photos
+- [ ] Final assembled-device demo
 
 ## Tools and Technologies
 
