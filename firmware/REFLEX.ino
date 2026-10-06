@@ -8,7 +8,7 @@
   - 3 color reaction inputs
   - Randomized cue timing
   - False-start detection
-  - Wrong-button penalties
+  - Wrong-button detection
   - Reaction-time measurement
   - 5-round scoring
   - LCD feedback
@@ -31,14 +31,14 @@ const int GREEN_LED = 5;
 const int BLUE_LED  = 4;
 
 // ---------------- Buttons ----------------
-// Buttons are wired directly to microcontroller because of integrated pullup resistors in each pinout
+// Buttons use the Mega's internal pull-up resistors; each switch connects its input pin to GND when pressed
 const int RED_BUTTON   = 8;
 const int GREEN_BUTTON = 9;
 const int BLUE_BUTTON  = 10;
 const int START_BUTTON = 11;
 
 // ---------------- Buzzer ----------------
-// To here audible cues for correct and incorrect answers
+// Provides audible feedback for correct and incorrect responses
 const int BUZZER_PIN = 12;
 
 // ---------------- LCD ----------------
@@ -120,7 +120,7 @@ void setup()
     pinMode(RED_LED, OUTPUT);
     pinMode(GREEN_LED, OUTPUT);
     pinMode(BLUE_LED, OUTPUT);
-// We pull up to make sure UNO MEGA can read a definite voltage 
+    // Internal pull-ups provide a defined HIGH state while buttons are released
     pinMode(RED_BUTTON, INPUT_PULLUP);
     pinMode(GREEN_BUTTON, INPUT_PULLUP);
     pinMode(BLUE_BUTTON, INPUT_PULLUP);
@@ -166,7 +166,7 @@ void loop()
     bool startPressed =
         (startState == LOW && prevStartState == HIGH);
 
-    switch (currentState) //changing states depending on what action is taken
+    switch (currentState) // Game behavior is controlled by the current FSM state
     {
         case IDLE:
 
@@ -178,7 +178,7 @@ void loop()
 
             break;
 
-        case WAITING: // Made to stop user from cheating by holding down button before light turns on
+        case WAITING: // Detect early presses before the cue becomes active
 
             if (redPressed || greenPressed || bluePressed)
             {
@@ -213,7 +213,7 @@ void loop()
                 }
                 else
                 {
-                    handleWrongResponse(); // If wrong button is pressed ends round with a 0 score.
+                    handleWrongResponse(); // Wrong button ends the round with 0 points.
                 }
             }
 
@@ -221,7 +221,7 @@ void loop()
 
         case RESULT:
 
-            if (startPressed) // Loop for the round totals. Once the 5 rounds are up it will then calculate score.
+            if (startPressed) // Continue to the next round or show final results after round 5.
             {
                 if (currentRound >= TOTAL_ROUNDS)
                 {
@@ -245,7 +245,7 @@ void loop()
 
             break;
     }
-// Penalties will be enforced depending on incorrect answers or false starts which will be added ms score to avg at the end of the game seoerate from avg though.
+// Wrong buttons and false starts score 0 points; no time penalty is added.
     prevRedState   = redState;
     prevGreenState = greenState;
     prevBlueState  = blueState;
@@ -256,7 +256,7 @@ void loop()
 // RESET GAME
 // =====================================================
 
-void resetGame() // Start button is our action button. Can move between screens, start game, and reset the game
+void resetGame() // START acts as the main action button for beginning, continuing, and restarting the game
 {
     currentRound = 0;
     score = 0;
