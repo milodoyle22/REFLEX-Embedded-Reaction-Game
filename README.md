@@ -1,51 +1,37 @@
 # REFLEX - Embedded Reaction-Time Game
 
-REFLEX is a five-round embedded reaction-time game built around an Arduino Mega 2560. The project combines embedded C++, digital electronics, transistor-driven illuminated arcade controls, a 16x2 LCD, audio feedback, custom soldered perfboard hardware, and an enclosure designed in Fusion 360 for 3D printing.
+REFLEX is a five-round embedded reaction-time game built around an Arduino Mega 2560. It combines embedded C++, digital electronics, transistor-switched illuminated arcade controls, a 16x2 LCD, audio feedback, permanent perfboard hardware, and a custom enclosure designed in Fusion 360 for 3D printing.
 
-## Prototype Demo
+> **Build status:** Core electronics, firmware, perfboard transfer, and enclosure CAD are complete. Final enclosure assembly and full-system validation are still in progress.
 
-A working breadboard prototype demonstrates the game flow, randomized cues, reaction-time measurement, LCD feedback, and scoring before the design was transferred to permanent hardware.
+## Demo
 
-[Watch the REFLEX breadboard prototype demo](docs/demo/REFLEX_Prototype_Demo.mp4)
+A working breadboard prototype demonstrates randomized cues, reaction-time measurement, scoring, LCD feedback, and wrong-button handling before the design was transferred to permanent hardware.
 
-## Project Goals
+**[Watch the REFLEX breadboard prototype demo](docs/demo/REFLEX_Prototype_Demo.mp4)**
 
-REFLEX was built as a hands-on electrical engineering project focused on the complete development cycle:
+## Engineering Highlights
 
-1. prototype the circuit on a breadboard,
-2. write and debug the embedded firmware,
-3. measure and validate hardware behavior,
-4. redesign the output stage where needed,
-5. transfer the circuit to permanent perfboard,
-6. design a serviceable enclosure,
-7. integrate and test the complete system.
-
-## Features
-
-- Randomized red, green, and blue reaction cues
-- Five-round game flow
-- Reaction-time measurement
-- False-start detection
-- Wrong-button detection
-- Score tracking
-- Best and average reaction-time reporting
-- 16x2 LCD user feedback
-- Passive buzzer for audio feedback
-- Separate START/NEXT control
-- Finite-state-machine firmware architecture
-- Illuminated arcade buttons
-- Custom perfboard power distribution and transistor driver circuitry
-- Internal USB power-bank power system
-- Custom Fusion 360 enclosure designed for 3D printing
+- Built a complete five-round reaction game around an Arduino Mega 2560
+- Structured the firmware as a finite-state machine rather than a blocking sequence
+- Replaced the original blocking wait logic with non-blocking timing so early presses can be detected
+- Measured the illuminated arcade-button LED load at approximately **22 mA**
+- Added three 2N2222A NPN low-side driver stages instead of placing the LED load directly on MCU GPIO
+- Used Arduino internal pull-ups for simple, reliable active-low button inputs
+- Migrated the validated breadboard circuit to soldered perfboard with dedicated +5 V and GND distribution
+- Designed a serviceable enclosure in Fusion 360 around the real component dimensions
 
 ## System Overview
 
-The system is organized into four main blocks:
-
-- **Controller:** Arduino Mega 2560
-- **User interface:** 3 colored arcade buttons, white START button, 16x2 LCD, passive buzzer
-- **Driver hardware:** 2N2222A NPN transistor stages for the red, green, and blue illuminated buttons
-- **Power/mechanical integration:** perfboard power rails, internal USB power bank, and a 3D-printed enclosure
+| Subsystem | Implementation |
+| --- | --- |
+| Controller | Arduino Mega 2560 |
+| Inputs | Red, green, blue, and START arcade-button switches |
+| Outputs | 3 illuminated color cues, 16x2 LCD, passive buzzer |
+| LED drivers | 3x 2N2222A NPN transistor low-side switches |
+| Permanent hardware | Custom soldered perfboard |
+| Mechanical design | Fusion 360 enclosure for 3D printing |
+| Power | Designed for internal USB power-bank operation |
 
 ### Signal Map
 
@@ -66,88 +52,105 @@ The system is organized into four main blocks:
 | LCD D6 | D26 |
 | LCD D7 | D27 |
 
+## Firmware Architecture
+
+The firmware uses five states:
+
+~~~mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    IDLE --> WAITING: START
+    WAITING --> RESULT: false start
+    WAITING --> CUE_ACTIVE: randomized wait expires
+    CUE_ACTIVE --> RESULT: correct or wrong input
+    RESULT --> WAITING: next round
+    RESULT --> GAME_OVER: round 5 complete
+    GAME_OVER --> IDLE: START / reset
+~~~
+
+- **IDLE** - waits for the player to start
+- **WAITING** - runs a randomized 2-5 second delay while still checking for false starts
+- **CUE_ACTIVE** - activates one randomized color cue and measures response time
+- **RESULT** - reports the round result and waits to continue
+- **GAME_OVER** - displays final score and average successful reaction time
+
+Reaction time is captured with **micros()**, while the waiting state uses non-blocking **millis()** timing so the program can continue checking inputs before the cue appears.
+
 ## Hardware Design
 
-The illuminated arcade buttons were tested at approximately **22 mA** LED current. Rather than placing that load directly on the Arduino GPIO pins, REFLEX uses three NPN transistor switching stages.
+The illuminated arcade-button LEDs were measured at approximately **22 mA**. REFLEX therefore uses a transistor stage for each colored LED instead of driving the load directly from an Arduino output.
 
-Each colored LED channel follows this general structure:
-
-```text
+~~~text
 Arduino output -> 1 kOhm -> transistor base
 +5 V -> 220 Ohm -> button LED +
 button LED - -> transistor collector
 transistor emitter -> GND
-```
+~~~
 
-The red, green, and blue button switches are read independently using the Arduino's internal pull-up resistors.
+The red, green, blue, and START switches use **INPUT_PULLUP**, so each input is HIGH when released and LOW when pressed. The white START-button LED is continuously illuminated as a status indicator.
 
-The white START button uses the same switch arrangement, while its LED remains continuously illuminated as a power/status indicator.
+## Development Process
 
-## Firmware Architecture
+The project was developed and validated incrementally:
 
-The game firmware is organized as a finite-state machine with the following states:
+1. Breadboarded the LCD, buzzer, input buttons, and cue LEDs
+2. Wrote and debugged the initial reaction-game firmware
+3. Identified the limitation of a blocking randomized delay
+4. Reworked the game flow into a non-blocking finite-state machine
+5. Measured the arcade-button LED current and added transistor drivers
+6. Tested all three color-driver channels
+7. Transferred the working circuit to soldered perfboard
+8. Designed the enclosure around the actual Mega, perfboard, LCD, controls, and power hardware
+9. Exported the printable enclosure parts and submitted them for 3D printing
 
-- `IDLE`
-- `WAITING`
-- `CUE_ACTIVE`
-- `RESULT`
-- `GAME_OVER`
+## CAD Files
 
-This structure separates game flow from input handling and timing logic. Reaction time is captured using microsecond-resolution timing, while a randomized delay prevents the user from predicting when the next cue will appear.
+Printable enclosure exports are available in [cad/stl/](cad/stl/):
 
-## Development and Testing
+- [REFLEX_Shell.stl](cad/stl/REFLEX_Shell.stl)
+- [REFLEX_Cover.stl](cad/stl/REFLEX_Cover.stl)
+- [REFLEX_Coupon.stl](cad/stl/REFLEX_Coupon.stl)
 
-REFLEX began as a breadboard prototype and was tested subsystem-by-subsystem before permanent assembly.
-
-Key development steps included:
-
-- validating arcade-button switch behavior,
-- measuring LED current with a digital multimeter,
-- adding transistor driver stages,
-- debugging button-state and hold behavior,
-- validating all three LED channels independently,
-- transferring the working circuit to perfboard,
-- creating dedicated +5 V and GND distribution rails,
-- soldering and testing permanent wiring,
-- designing the enclosure around the real component dimensions.
+The coupon is a small print used to validate fit/tolerance before committing to the full enclosure print.
 
 ## Repository Structure
 
-```text
+~~~text
 REFLEX-Embedded-Reaction-Game/
-|
 |-- README.md
 |-- firmware/
+|   |-- REFLEX.ino
+|   `-- README.md
 |-- hardware/
-|   |-- schematic/
-|   |-- perfboard/
-|   `-- wiring/
+|   |-- README.md
+|   `-- pinout.md
 |-- cad/
-|   |-- source/
+|   |-- README.md
 |   `-- stl/
 |-- docs/
-|   |-- images/
-|   `-- demo/
-|-- bom/
-|   `-- BOM.md
-`-- LICENSE
-```
+|   |-- demo/
+|   `-- images/
+`-- bom/
+    `-- BOM.md
+~~~
 
 ## Current Build Status
 
 - [x] Breadboard prototype
 - [x] Core game firmware
+- [x] Non-blocking FSM timing
 - [x] LCD interface
 - [x] False-start and wrong-button logic
 - [x] Transistor LED drivers
 - [x] Perfboard transfer
 - [x] Three-channel LED hardware test
 - [x] Fusion 360 enclosure design
+- [x] STL exports
 - [x] Enclosure submitted for 3D printing
+- [x] Breadboard prototype demo video
 - [ ] Final enclosure assembly
 - [ ] Final integrated system test
-- [x] Breadboard prototype demo video
-- [ ] Final project photos
+- [ ] Final assembled-device photos
 - [ ] Final assembled-device demo
 
 ## Tools and Technologies
@@ -169,4 +172,4 @@ Expected Graduation: May 2028
 
 ---
 
-This repository documents an ongoing engineering build. Final CAD exports, firmware, hardware documentation, and project photos will be added as the system reaches final assembly.
+This repository documents an ongoing engineering build. Final enclosure photos and integrated-system results will be added after assembly.

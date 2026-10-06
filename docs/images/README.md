@@ -1,13 +1,18 @@
 # Project Images
 
-This directory will contain images documenting the REFLEX build.
+This directory contains development photos from the REFLEX build.
 
-Planned images:
-1. breadboard prototype
-2. transistor driver testing
-3. finished perfboard
-4. Fusion 360 enclosure
-5. internal assembly
-6. completed REFLEX device
+## Current Photos
 
-These images will also be referenced from the main project README.
+The current files document the breadboard-prototype stage and are retained as original HEIC captures in the **raw/** folder.
+
+Key prototype shots include:
+
+- **breadboard-start-screen.HEIC**
+- **breadboard-hardware-closeup.HEIC**
+- **breadboard-wrong-button.HEIC**
+- **breadboard-game-over.HEIC**
+
+Additional development photos are also retained in **raw/**.
+
+Final assembled-device photos will be added after the enclosure is printed and the complete system is integrated. JPG/PNG versions of the strongest images can then be embedded directly in the main README.
